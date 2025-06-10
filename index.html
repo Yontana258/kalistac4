@@ -1,88 +1,344 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="./resources/ol.css">
-        <link rel="stylesheet" href="resources/fontawesome-all.min.css">
-        <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
-        <link rel="stylesheet" href="./resources/qgis2web.css">
-        <style>
-        html, body {
-            background-color: #ffffff;
-        }
-        .ol-control > * {
-            background-color: #f8f8f8!important;
-            color: #444444!important;
-            border-radius: 0px;
-        }
-        .ol-attribution a, .gcd-gl-input::placeholder, .search-layer-input-search::placeholder {
-            color: #444444!important;
-        }
-        .search-layer-input-search {
-            background-color: #f8f8f8!important;
-        }
-        .ol-control > *:focus, .ol-control >*:hover {
-            background-color: rgba(248, 248, 248, 0.7)!important;
-        } 
-        .ol-control {
-            background-color: rgba(255,255,255,.4) !important;
-            padding: 2px !important;
-        } 
-        .logout-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 10px 15px;
-            background-color: #f44336;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .logout-button:hover {
-            background-color: #d32f2f;
-        }
-        </style>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="stylesheet" href="./resources/ol.css" />
+  <link rel="stylesheet" href="resources/fontawesome-all.min.css" />
+  <link rel="stylesheet" href="./resources/ol-layerswitcher.css" />
+  <link rel="stylesheet" href="./resources/qgis2web.css" />
+  <title>Map Viewer</title>
 
-        <style>
-        html, body, #map {
-            width: 100%;
-            height: 100%;
-            padding: 0;
-            margin: 0;
-        }
-        </style>
-        <title></title>
-    </head>
-    <body>
-        <div id="map">
-            <div id="popup" class="ol-popup">
-                <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-                <div id="popup-content"></div>
-            </div>
+  <style>
+    /* Reset & base */
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background-color: #ffffff;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #6b7280;
+      overflow: hidden;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
+      box-sizing: border-box;
+      padding: 0 1rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      z-index: 1000;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    /* Logout button */
+    .logout-button {
+      padding: 0.5em 1em;
+      background-color: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .logout-button:hover,
+    .logout-button:focus {
+      background-color: #b91c1c;
+      outline: none;
+    }
+
+    /* Main content area: map and side panels */
+    #content {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 250px 1fr 250px;
+      grid-template-rows: 100%;
+      gap: 1rem;
+      position: relative;
+      height: 100%;
+    }
+
+    /* Layers panel */
+    #layers-panel, #legend-panel {
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      max-height: 100%;
+      overflow-y: auto;
+      user-select: none;
+    }
+
+    #layers-panel header, #legend-panel header {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    #layers-panel header button, #legend-panel header button {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #6b7280;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    #layers-panel header button:hover,
+    #legend-panel header button:hover {
+      color: #111827;
+    }
+    /* Expanded/collapsed content */
+    #layers-content, #legend-content {
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #layers-content.collapsed, #legend-content.collapsed {
+      max-height: 0;
+      padding: 0;
+      margin: 0;
+      pointer-events: none;
+    }
+    #layers-content.expanded, #legend-content.expanded {
+      max-height: 500px;
+    }
+
+    /* Layers list */
+    .layer-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      color: #374151;
+    }
+    .layer-item:last-child {
+      margin-bottom: 0;
+    }
+    .layer-item input[type="checkbox"] {
+      margin-right: 0.75rem;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .layer-label {
+      user-select: none;
+      cursor: pointer;
+    }
+
+    /* Legend entries */
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      color: #374151;
+    }
+    .legend-item:last-child {
+      margin-bottom: 0;
+    }
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 0.25rem;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgb(0 0 0 / 0.1);
+    }
+
+    /* Map */
+    #map {
+      width: 100%;
+      height: 100%;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+      position: relative;
+    }
+    /* Popup */
+    .ol-popup {
+      max-width: 320px;
+      padding: 10px 14px;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+      background: white;
+    }
+    .ol-popup-closer {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      font-size: 1.5rem;
+      text-decoration: none;
+      color: #6b7280;
+      cursor: pointer;
+      user-select: none;
+    }
+    .ol-popup-closer:hover {
+      color: #111827;
+    }
+
+    /* Responsive */
+    @media(max-width: 900px) {
+      #content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 48rem auto;
+      }
+      #layers-panel, #legend-panel {
+        max-height: 200px;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0.5rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" role="main">
+    <header>
+      <h1>Map Viewer</h1>
+      <button class="logout-button" type="button" aria-label="Logout" onclick="logout()">Logout</button>
+    </header>
+
+    <div id="content">
+      <section id="layers-panel" aria-labelledby="layers-label" role="region" aria-expanded="true">
+        <header id="layers-label">
+          Layers
+          <button type="button" aria-label="Toggle Layers Panel" aria-expanded="true" id="layers-toggle">&#9650;</button>
+        </header>
+        <div id="layers-content" class="expanded" tabindex="0">
+          <div class="layer-item">
+            <input type="checkbox" id="layer1" checked>
+            <label for="layer1" class="layer-label">Persil Baru 1</label>
+          </div>
+          <div class="layer-item">
+            <input type="checkbox" id="layer2" checked>
+            <label for="layer2" class="layer-label">Layer Example 2</label>
+          </div>
+          <div class="layer-item">
+            <input type="checkbox" id="layer3">
+            <label for="layer3" class="layer-label">Layer Example 3</label>
+          </div>
         </div>
-        <button class="logout-button" onclick="logout()">Logout</button>
-        <script src="resources/qgis2web_expressions.js"></script>
-        <script src="./resources/functions.js"></script>
-        <script src="./resources/ol.js"></script>
-        <script src="./resources/ol-layerswitcher.js"></script>
-        <script src="layers/persil_baru_1.js"></script>
-        <script src="styles/persil_baru_1_style.js"></script>
-        <script src="./layers/layers.js" type="text/javascript"></script> 
-        <script src="./resources/Autolinker.min.js"></script>
-        <script src="./resources/qgis2web.js"></script>
-        <script>
-            function logout() {
-                // Add your logout logic here
-                alert("Logging out...");
-                // Redirect to the login page or perform logout action
-                // window.location.href = 'https://yontana258.github.io/kaliistac4/'; // Example redirect
-            }
-        </script>
-    </body>
+      </section>
+
+      <div id="map" role="region" aria-label="Map"></div>
+
+      <section id="legend-panel" aria-labelledby="legend-label" role="region" aria-expanded="true">
+        <header id="legend-label">
+          Legend
+          <button type="button" aria-label="Toggle Legend Panel" aria-expanded="true" id="legend-toggle">&#9650;</button>
+        </header>
+        <div id="legend-content" class="expanded" tabindex="0">
+          <div class="legend-item">
+            <div class="legend-color" style="background:#ff0000;" aria-hidden="true"></div>
+            <span>Persil Baru 1</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:#00ff00;" aria-hidden="true"></div>
+            <span>Layer Example 2</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:#0000ff;" aria-hidden="true"></div>
+            <span>Layer Example 3</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="resources/qgis2web_expressions.js"></script>
+  <script src="./resources/functions.js"></script>
+  <script src="./resources/ol.js"></script>
+  <script src="./resources/ol-layerswitcher.js"></script>
+  <script src="layers/persil_baru_1.js"></script>
+  <script src="styles/persil_baru_1_style.js"></script>
+  <script src="./layers/layers.js" type="text/javascript"></script> 
+  <script src="./resources/Autolinker.min.js"></script>
+  <script src="./resources/qgis2web.js"></script>
+
+  <script>
+    // Logout function placeholder
+    function logout() {
+      alert("Logging out...");
+      // Add logout logic or redirect here
+      // window.location.href = 'login.html';
+    }
+
+    // Panel toggle logic
+    document.getElementById('layers-toggle').addEventListener('click', function() {
+      const content = document.getElementById('layers-content');
+      const expanded = this.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        content.classList.remove('expanded');
+        content.classList.add('collapsed');
+        this.setAttribute('aria-expanded', 'false');
+        this.innerHTML = "&#9660;";
+        document.getElementById('layers-panel').setAttribute('aria-expanded', 'false');
+      } else {
+        content.classList.remove('collapsed');
+        content.classList.add('expanded');
+        this.setAttribute('aria-expanded', 'true');
+        this.innerHTML = "&#9650;";
+        document.getElementById('layers-panel').setAttribute('aria-expanded', 'true');
+      }
+    });
+    document.getElementById('legend-toggle').addEventListener('click', function() {
+      const content = document.getElementById('legend-content');
+      const expanded = this.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        content.classList.remove('expanded');
+        content.classList.add('collapsed');
+        this.setAttribute('aria-expanded', 'false');
+        this.innerHTML = "&#9660;";
+        document.getElementById('legend-panel').setAttribute('aria-expanded', 'false');
+      } else {
+        content.classList.remove('collapsed');
+        content.classList.add('expanded');
+        this.setAttribute('aria-expanded', 'true');
+        this.innerHTML = "&#9650;";
+        document.getElementById('legend-panel').setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    // Example layer toggle logic
+    const layerCheckboxes = document.querySelectorAll('#layers-content input[type="checkbox"]');
+    layerCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const layerId = e.target.id;
+        const checked = e.target.checked;
+        // Integrate with map layers here depending on your map API
+        console.log(`Layer ${layerId} visibility: ${checked}`);
+        // Example pseudocode:
+        // yourMap.setLayerVisibility(layerId, checked);
+      });
+    });
+  </script>
+</body>
 </html>
+
