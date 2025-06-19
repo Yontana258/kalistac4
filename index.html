@@ -1,4 +1,4 @@
-<!doctype html>More actions
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -14,17 +14,18 @@
   <style>
     /* Reset & base */
     html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
       background-color: #f9f9f9;
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       color: #333;
-      overflow: hidden;
     }
     #app {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      min-height: 100vh;
       max-width: 1200px;
       margin: 0 auto;
       box-sizing: border-box;
@@ -73,10 +74,8 @@
       flex: 1;
       display: grid;
       grid-template-columns: 250px 1fr 250px;
-      grid-template-rows: 100%;
       gap: 1rem;
       position: relative;
-      height: 100%;
     }
 
     /* Layers panel */
@@ -87,7 +86,7 @@
       padding: 1rem;
       display: flex;
       flex-direction: column;
-      max-height: 100%;
+      max-height: 80vh;
       overflow-y: auto;
       user-select: none;
     }
@@ -176,7 +175,7 @@
     /* Map */
     #map {
       width: 100%;
-      height: 100%;
+      height: 60vh;
       border-radius: 0.75rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       position: relative;
@@ -208,13 +207,16 @@
     @media(max-width: 900px) {
       #content {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 48rem auto;
+        grid-template-rows: auto auto auto;
       }
       #layers-panel, #legend-panel {
-        max-height: 200px;
+        max-height: 300px;
         border-radius: 0;
         box-shadow: none;
         padding: 0.5rem 1rem;
+      }
+      #map {
+        height: 50vh;
       }
     }
   </style>
@@ -222,16 +224,38 @@
 <body>
   <div id="app" role="main">
     <header>
-      <h1>KALISTAr</h1>
+      <h1>KALISTA</h1>
       <button class="logout-button" type="button" aria-label="Logout" onclick="logout()">Logout</button>
     </header>
+
+    <div id="content">
+      <section id="layers-panel" aria-labelledby="layers-label" role="region" aria-expanded="true">
+        <header id="layers-label">
+          Layers
+          <button type="button" aria-label="Toggle Layers Panel" aria-expanded="true" id="layers-toggle">▲</button>
+        </header>
+        <div id="layers-content" class="expanded" tabindex="0">
+          <div class="layer-item">
+            <input type="checkbox" id="layer1" checked />
+            <label class="layer-label" for="layer1">Persil Baru</label>
+          </div>
+          <div class="layer-item">
+            <input type="checkbox" id="layer2" checked />
+            <label class="layer-label" for="layer2">Layer 2</label>
+          </div>
+          <div class="layer-item">
+            <input type="checkbox" id="layer3" checked />
+            <label class="layer-label" for="layer3">Layer 3</label>
+          </div>
+        </div>
+      </section>
 
       <div id="map" role="region" aria-label="Map"></div>
 
       <section id="legend-panel" aria-labelledby="legend-label" role="region" aria-expanded="true">
         <header id="legend-label">
           Legend
-          <button type="button" aria-label="Toggle Legend Panel" aria-expanded="true" id="legend-toggle">&#9650;</button>
+          <button type="button" aria-label="Toggle Legend Panel" aria-expanded="true" id="legend-toggle">▲</button>
         </header>
         <div id="legend-content" class="expanded" tabindex="0">
           <div class="legend-item">
@@ -271,45 +295,52 @@
     // Logout function placeholder
     function logout() {
       alert("Logging out...");
-      // Add logout logic or redirect here
       // window.location.href = 'https://yontana258.github.io/kaliistac4/';
     }
 
-    // Panel toggle logic
-    document.getElementById('layers-toggle').addEventListener('click', function() {
-      const content = document.getElementById('layers-content');
-      const expanded = this.getAttribute('aria-expanded') === 'true';
-      if (expanded) {
-        content.classList.remove('expanded');
-        content.classList.add('collapsed');
-        this.setAttribute('aria-expanded', 'false');
-        this.innerHTML = "&#9660;";
-        document.getElementById('layers-panel').setAttribute('aria-expanded', 'false');
-      } else {
-        content.classList.remove('collapsed');
-        content.classList.add('expanded');
-        this.setAttribute('aria-expanded', 'true');
-        this.innerHTML = "&#9650;";
-        document.getElementById('layers-panel').setAttribute('aria-expanded', 'true');
-      }
-    });
-    document.getElementById('legend-toggle').addEventListener('click', function() {
-      const content = document.getElementById('legend-content');
-      const expanded = this.getAttribute('aria-expanded') === 'true';
-      if (expanded) {
-        content.classList.remove('expanded');
-        content.classList.add('collapsed');
-        this.setAttribute('aria-expanded', 'false');
-        this.innerHTML = "&#9660;";
-        document.getElementById('legend-panel').setAttribute('aria-expanded', 'false');
-      } else {
-        content.classList.remove('collapsed');
-        content.classList.add('expanded');
-        this.setAttribute('aria-expanded', 'true');
-        this.innerHTML = "&#9650;";
-        document.getElementById('legend-panel').setAttribute('aria-expanded', 'true');
-      }
-    });
+    // Panel toggle logic for layers
+    const layersToggle = document.getElementById('layers-toggle');
+    if (layersToggle) {
+      layersToggle.addEventListener('click', function() {
+        const content = document.getElementById('layers-content');
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        if (expanded) {
+          content.classList.remove('expanded');
+          content.classList.add('collapsed');
+          this.setAttribute('aria-expanded', 'false');
+          this.innerHTML = "▼";
+          document.getElementById('layers-panel').setAttribute('aria-expanded', 'false');
+        } else {
+          content.classList.remove('collapsed');
+          content.classList.add('expanded');
+          this.setAttribute('aria-expanded', 'true');
+          this.innerHTML = "▲";
+          document.getElementById('layers-panel').setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
+
+    // Panel toggle logic for legend
+    const legendToggle = document.getElementById('legend-toggle');
+    if (legendToggle) {
+      legendToggle.addEventListener('click', function() {
+        const content = document.getElementById('legend-content');
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        if (expanded) {
+          content.classList.remove('expanded');
+          content.classList.add('collapsed');
+          this.setAttribute('aria-expanded', 'false');
+          this.innerHTML = "▼";
+          document.getElementById('legend-panel').setAttribute('aria-expanded', 'false');
+        } else {
+          content.classList.remove('collapsed');
+          content.classList.add('expanded');
+          this.setAttribute('aria-expanded', 'true');
+          this.innerHTML = "▲";
+          document.getElementById('legend-panel').setAttribute('aria-expanded', 'true');
+        }
+      });
+    }
 
     // Initialize map
     const map = new ol.Map({
@@ -320,37 +351,29 @@
         }),
         new ol.layer.Vector({
           source: new ol.source.Vector({
-            url: 'path/to/your/shp/file.shp', // Ganti dengan path ke file SHP Anda
-            format: new ol.format.Shapefile() // Pastikan Anda menggunakan format yang benar
+            url: 'path/to/your/shp/file.shp',
+            format: new ol.format.Shapefile()
           }),
-          visible: true // Set default visibility
+          visible: true
         })
       ],
       view: new ol.View({
-@@ -373,18 +380,25 @@
-      return false;
-    };
+        center: [0, 0],
+        zoom: 2
+      })
+    });
 
-    // Example layer toggle logic
     // Layer toggle logic
     const layerCheckboxes = document.querySelectorAll('#layers-content input[type="checkbox"]');
     layerCheckboxes.forEach(checkbox => {
       checkbox.addEventListener('change', (e) => {
         const layerId = e.target.id;
         const checked = e.target.checked;
-        // Integrate with map layers here depending on your map API
-        console.log(`Layer ${layerId} visibility: ${checked}`);
-        // Example pseudocode:
-        // yourMap.setLayerVisibility(layerId, checked);
-
-        // Set layer visibility based on checkbox state
         if (layerId === 'layer1') {
-          map.getLayers().item(1).setVisible(checked); // Assuming layer1 is the vector layer
+          map.getLayers().item(1).setVisible(checked);
         } else if (layerId === 'layer2') {
-          // Handle other layers similarly
           console.log(`Layer ${layerId} visibility: ${checked}`);
         } else if (layerId === 'layer3') {
-          // Handle other layers similarly
           console.log(`Layer ${layerId} visibility: ${checked}`);
         }
       });
