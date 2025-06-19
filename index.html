@@ -339,6 +339,13 @@
       layers: [
         new ol.layer.Tile({
           source: new ol.source.OSM()
+        }),
+        new ol.layer.Vector({
+          source: new ol.source.Vector({
+            url: 'path/to/your/shp/file.shp', // Ganti dengan path ke file SHP Anda
+            format: new ol.format.Shapefile() // Pastikan Anda menggunakan format yang benar
+          }),
+          visible: true // Set default visibility
         })
       ],
       view: new ol.View({
@@ -373,16 +380,23 @@
       return false;
     };
 
-    // Example layer toggle logic
+    // Layer toggle logic
     const layerCheckboxes = document.querySelectorAll('#layers-content input[type="checkbox"]');
     layerCheckboxes.forEach(checkbox => {
       checkbox.addEventListener('change', (e) => {
         const layerId = e.target.id;
         const checked = e.target.checked;
-        // Integrate with map layers here depending on your map API
-        console.log(`Layer ${layerId} visibility: ${checked}`);
-        // Example pseudocode:
-        // yourMap.setLayerVisibility(layerId, checked);
+
+        // Set layer visibility based on checkbox state
+        if (layerId === 'layer1') {
+          map.getLayers().item(1).setVisible(checked); // Assuming layer1 is the vector layer
+        } else if (layerId === 'layer2') {
+          // Handle other layers similarly
+          console.log(`Layer ${layerId} visibility: ${checked}`);
+        } else if (layerId === 'layer3') {
+          // Handle other layers similarly
+          console.log(`Layer ${layerId} visibility: ${checked}`);
+        }
       });
     });
   </script>
