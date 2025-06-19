@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="resources/fontawesome-all.min.css" />
   <link rel="stylesheet" href="./resources/ol-layerswitcher.css" />
   <link rel="stylesheet" href="./resources/qgis2web.css" />
-  <title>Map Viewer</title>
+  <title>KALISTA</title>
 
   <style>
     /* Reset & base */
@@ -270,10 +270,12 @@
   <script src="./resources/qgis2web.js"></script>
 
   <script>
-    // Logout function placeholder
+    // Logout function
     function logout() {
-      alert("Logging out...");
-      // window.location.href = 'https://yontana258.github.io/kaliistac4/';
+      // Optional: Show confirmation before redirecting
+      if (confirm("Are you sure you want to log out?")) {
+        window.location.href = 'https://yontana258.github.io/kaliistac4/';
+      }
     }
 
     // Panel toggle logic for layers
