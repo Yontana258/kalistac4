@@ -222,31 +222,9 @@
 <body>
   <div id="app" role="main">
     <header>
-      <h1>Map Viewer</h1>
+      <h1>KALISTAr</h1>
       <button class="logout-button" type="button" aria-label="Logout" onclick="logout()">Logout</button>
     </header>
-
-    <div id="content">
-      <section id="layers-panel" aria-labelledby="layers-label" role="region" aria-expanded="true">
-        <header id="layers-label">
-          Layers
-          <button type="button" aria-label="Toggle Layers Panel" aria-expanded="true" id="layers-toggle">&#9650;</button>
-        </header>
-        <div id="layers-content" class="expanded" tabindex="0">
-          <div class="layer-item">
-            <input type="checkbox" id="layer1" checked>
-            <label for="layer1" class="layer-label">Persil Baru 1</label>
-          </div>
-          <div class="layer-item">
-            <input type="checkbox" id="layer2" checked>
-            <label for="layer2" class="layer-label">Layer Example 2</label>
-          </div>
-          <div class="layer-item">
-            <input type="checkbox" id="layer3">
-            <label for="layer3" class="layer-label">Layer Example 3</label>
-          </div>
-        </div>
-      </section>
 
       <div id="map" role="region" aria-label="Map"></div>
 
