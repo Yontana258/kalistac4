@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html>More actions
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -68,15 +68,109 @@
       outline: none;
     }
 
-    /* Main content area: map */
+    /* Main content area: map and side panels */
     #content {
       flex: 1;
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 250px 1fr 250px;
       grid-template-rows: 100%;
       gap: 1rem;
       position: relative;
       height: 100%;
+    }
+
+    /* Layers panel */
+    #layers-panel, #legend-panel {
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      max-height: 100%;
+      overflow-y: auto;
+      user-select: none;
+    }
+
+    #layers-panel header, #legend-panel header {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    #layers-panel header button, #legend-panel header button {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #6b7280;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    #layers-panel header button:hover,
+    #legend-panel header button:hover {
+      color: #111827;
+    }
+
+    /* Expanded/collapsed content */
+    #layers-content, #legend-content {
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #layers-content.collapsed, #legend-content.collapsed {
+      max-height: 0;
+      padding: 0;
+      margin: 0;
+      pointer-events: none;
+    }
+    #layers-content.expanded, #legend-content.expanded {
+      max-height: 500px;
+    }
+
+    /* Layers list */
+    .layer-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      color: #374151;
+    }
+    .layer-item:last-child {
+      margin-bottom: 0;
+    }
+    .layer-item input[type="checkbox"] {
+      margin-right: 0.75rem;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .layer-label {
+      user-select: none;
+      cursor: pointer;
+    }
+
+    /* Legend entries */
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      color: #374151;
+    }
+    .legend-item:last-child {
+      margin-bottom: 0;
+    }
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 0.25rem;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
     }
 
     /* Map */
@@ -116,6 +210,12 @@
         grid-template-columns: 1fr;
         grid-template-rows: auto 48rem auto;
       }
+      #layers-panel, #legend-panel {
+        max-height: 200px;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0.5rem 1rem;
+      }
     }
   </style>
 </head>
@@ -127,7 +227,49 @@
     </header>
 
     <div id="content">
+      <section id="layers-panel" aria-labelledby="layers-label" role="region" aria-expanded="true">
+        <header id="layers-label">
+          Layers
+          <button type="button" aria-label="Toggle Layers Panel" aria-expanded="true" id="layers-toggle">&#9650;</button>
+        </header>
+        <div id="layers-content" class="expanded" tabindex="0">
+          <div class="layer-item">
+            <input type="checkbox" id="layer1" checked>
+            <label for="layer1" class="layer-label">Persil Baru 1</label>
+          </div>
+          <div class="layer-item">
+            <input type="checkbox" id="layer2" checked>
+            <label for="layer2" class="layer-label">Layer Example 2</label>
+          </div>
+          <div class="layer-item">
+            <input type="checkbox" id="layer3">
+            <label for="layer3" class="layer-label">Layer Example 3</label>
+          </div>
+        </div>
+      </section>
+
       <div id="map" role="region" aria-label="Map"></div>
+
+      <section id="legend-panel" aria-labelledby="legend-label" role="region" aria-expanded="true">
+        <header id="legend-label">
+          Legend
+          <button type="button" aria-label="Toggle Legend Panel" aria-expanded="true" id="legend-toggle">&#9650;</button>
+        </header>
+        <div id="legend-content" class="expanded" tabindex="0">
+          <div class="legend-item">
+            <div class="legend-color" style="background:#ff0000;" aria-hidden="true"></div>
+            <span>Kosong</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:#00ff00;" aria-hidden="true"></div>
+            <span>Hak Milik</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:#0000ff;" aria-hidden="true"></div>
+            <span>Hak Guna Bangunan</span>
+          </div>
+        </div>
+      </section>
     </div>
 
     <!-- Popup for map -->
@@ -140,6 +282,11 @@
   <script src="resources/qgis2web_expressions.js"></script>
   <script src="./resources/functions.js"></script>
   <script src="./resources/ol.js"></script>
+  <script src="./resources/ol-layerswitcher.js"></script>
+  <script src="layers/persil_baru_1.js"></script>
+  <script src="styles/persil_baru_1_style.js"></script>
+  <script src="./layers/layers.js" type="text/javascript"></script> 
+  <script src="./resources/Autolinker.min.js"></script>
   <script src="./resources/qgis2web.js"></script>
 
   <script>
@@ -149,6 +296,42 @@
       // Add logout logic or redirect here
       // window.location.href = 'https://yontana258.github.io/kaliistac4/';
     }
+
+    // Panel toggle logic
+    document.getElementById('layers-toggle').addEventListener('click', function() {
+      const content = document.getElementById('layers-content');
+      const expanded = this.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        content.classList.remove('expanded');
+        content.classList.add('collapsed');
+        this.setAttribute('aria-expanded', 'false');
+        this.innerHTML = "&#9660;";
+        document.getElementById('layers-panel').setAttribute('aria-expanded', 'false');
+      } else {
+        content.classList.remove('collapsed');
+        content.classList.add('expanded');
+        this.setAttribute('aria-expanded', 'true');
+        this.innerHTML = "&#9650;";
+        document.getElementById('layers-panel').setAttribute('aria-expanded', 'true');
+      }
+    });
+    document.getElementById('legend-toggle').addEventListener('click', function() {
+      const content = document.getElementById('legend-content');
+      const expanded = this.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        content.classList.remove('expanded');
+        content.classList.add('collapsed');
+        this.setAttribute('aria-expanded', 'false');
+        this.innerHTML = "&#9660;";
+        document.getElementById('legend-panel').setAttribute('aria-expanded', 'false');
+      } else {
+        content.classList.remove('collapsed');
+        content.classList.add('expanded');
+        this.setAttribute('aria-expanded', 'true');
+        this.innerHTML = "&#9650;";
+        document.getElementById('legend-panel').setAttribute('aria-expanded', 'true');
+      }
+    });
 
     // Initialize map
     const map = new ol.Map({
@@ -166,36 +349,34 @@
         })
       ],
       view: new ol.View({
-        center: ol.proj.fromLonLat([0, 0]), // Ganti dengan koordinat yang sesuai
-        zoom: 2
-      })
-    });
-
-    // Initialize popup
-    const popup = new ol.Overlay({
-      element: document.getElementById('popup'),
-      autoPan: true,
-      autoPanAnimation: {
-        duration: 250
-      }
-    });
-    map.addOverlay(popup);
-
-    // Event click on map
-    map.on('singleclick', function (evt) {
-      const coordinate = evt.coordinate;
-      const content = '<p>Informasi peta di sini!</p>'; // Ganti dengan informasi yang relevan
-      popup.setPosition(coordinate);
-      document.getElementById('popup-content').innerHTML = content;
-      popup.setPosition(coordinate);
-    });
-
-    // Close popup when clicked
-    document.getElementById('popup-closer').onclick = function () {
-      popup.setPosition(undefined);
-      this.blur();
+@@ -373,18 +380,25 @@
       return false;
     };
+
+    // Example layer toggle logic
+    // Layer toggle logic
+    const layerCheckboxes = document.querySelectorAll('#layers-content input[type="checkbox"]');
+    layerCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const layerId = e.target.id;
+        const checked = e.target.checked;
+        // Integrate with map layers here depending on your map API
+        console.log(`Layer ${layerId} visibility: ${checked}`);
+        // Example pseudocode:
+        // yourMap.setLayerVisibility(layerId, checked);
+
+        // Set layer visibility based on checkbox state
+        if (layerId === 'layer1') {
+          map.getLayers().item(1).setVisible(checked); // Assuming layer1 is the vector layer
+        } else if (layerId === 'layer2') {
+          // Handle other layers similarly
+          console.log(`Layer ${layerId} visibility: ${checked}`);
+        } else if (layerId === 'layer3') {
+          // Handle other layers similarly
+          console.log(`Layer ${layerId} visibility: ${checked}`);
+        }
+      });
+    });
   </script>
 </body>
 </html>
