@@ -14,7 +14,259 @@
 
   <style>
     /* Reset & base */
-@@ -270,92 +270,94 @@
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      background-color: #f9f9f9;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #333;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
+      box-sizing: border-box;
+      padding: 0 1rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      z-index: 1000;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    /* Logout button */
+    .logout-button {
+      padding: 0.5em 1em;
+      background-color: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .logout-button:hover,
+    .logout-button:focus {
+      background-color: #b91c1c;
+      outline: none;
+    }
+
+    /* Main content area: map and side panels */
+    #content {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 250px 1fr 250px;
+      gap: 1rem;
+      position: relative;
+    }
+
+    /* Layers panel */
+    #layers-panel, #legend-panel {
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      max-height: 80vh;
+      overflow-y: auto;
+      user-select: none;
+    }
+
+    #layers-panel header, #legend-panel header {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    #layers-panel header button, #legend-panel header button {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #6b7280;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    #layers-panel header button:hover,
+    #legend-panel header button:hover {
+      color: #111827;
+    }
+
+    /* Expanded/collapsed content */
+    #layers-content, #legend-content {
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #layers-content.collapsed, #legend-content.collapsed {
+      max-height: 0;
+      padding: 0;
+      margin: 0;
+      pointer-events: none;
+    }
+    #layers-content.expanded, #legend-content.expanded {
+      max-height: 500px;
+    }
+
+    /* Layers list */
+    .layer-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      color: #374151;
+    }
+    .layer-item:last-child {
+      margin-bottom: 0;
+    }
+    .layer-item input[type="checkbox"] {
+      margin-right: 0.75rem;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .layer-label {
+      user-select: none;
+      cursor: pointer;
+    }
+
+    /* Legend entries */
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      color: #374151;
+    }
+    .legend-item:last-child {
+      margin-bottom: 0;
+    }
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 0.25rem;
+      margin-right: 0.75rem;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Map */
+    #map {
+      width: 100%;
+      height: 60vh;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    /* Popup */
+    .ol-popup {
+      max-width: 320px;
+      padding: 10px 14px;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: white;
+    }
+    .ol-popup-closer {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      font-size: 1.5rem;
+      text-decoration: none;
+      color: #6b7280;
+      cursor: pointer;
+      user-select: none;
+    }
+    .ol-popup-closer:hover {
+      color: #111827;
+    }
+
+    /* Responsive */
+    @media(max-width: 900px) {
+      #content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+      }
+      #layers-panel, #legend-panel {
+        max-height: 300px;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0.5rem 1rem;
+      }
+      #map {
+        height: 50vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" role="main">
+    <header>
+      <h1>KALISTA</h1>
+      <button class="logout-button" type="button" aria-label="Logout" onclick="logout()">Logout</button>
+    </header>
+
+      <div id="map" role="region" aria-label="Map"></div>
+
+      <section id="legend-panel" aria-labelledby="legend-label" role="region" aria-expanded="true">
+        <header id="legend-label">
+          Legend
+          <button type="button" aria-label="Toggle Legend Panel" aria-expanded="true" id="legend-toggle">▲</button>
+        </header>
+        <div id="legend-content" class="expanded" tabindex="0">
+          <div class="legend-item">
+            <div class="legend-color" style="background:#ff0000;" aria-hidden="true"></div>
+            <span>Kosong</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background:#00ff00;" aria-hidden="true"></div>
+            <span>Hak Milik</span>
+          </div>
+@@ -249,113 +249,115 @@
+            <span>Hak Guna Bangunan</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Popup for map -->
+    <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer">×</a>
+      <div id="popup-content"></div>
+    </div>
+  </div>
+
+  <script src="resources/qgis2web_expressions.js"></script>
+  <script src="./resources/functions.js"></script>
+  <script src="./resources/ol.js"></script>
+  <script src="./resources/ol-layerswitcher.js"></script>
+  <script src="layers/persil_baru_1.js"></script>
+  <script src="styles/persil_baru_1_style.js"></script>
+  <script src="./layers/layers.js" type="text/javascript"></script> 
+  <script src="./resources/Autolinker.min.js"></script>
   <script src="./resources/qgis2web.js"></script>
 
   <script>
