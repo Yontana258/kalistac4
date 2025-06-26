@@ -5,10 +5,13 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <link rel="stylesheet" href="./resources/ol.css" />
+  <!-- Load OpenLayers from CDN for reliability -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.3.0/ol.css" />
+  <script src="https://cdn.jsdelivr.net/npm/ol@7.3.0/dist/ol.js"></script>
   <link rel="stylesheet" href="resources/fontawesome-all.min.css" />
   <link rel="stylesheet" href="./resources/ol-layerswitcher.css" />
   <link rel="stylesheet" href="./resources/qgis2web.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <title>KALISTA</title>
 
   <style>
@@ -225,8 +228,22 @@
   <div id="app" role="main">
     <header>
       <h1>KALISTA</h1>
-      <button class="logout-button" type="button" aria-label="Logout" onclick="logout()">Logout</button>
+      <button class="logout-button" type="button" aria-label="Logout" id="logout-btn" style="display: none;" onclick="logout()">Logout</button>
     </header>
+
+    <div id="content">
+      <section id="layers-panel" aria-labelledby="layers-label" role="region" aria-expanded="true">
+        <header id="layers-label">
+          Layers
+          <button type="button" aria-label="Toggle Layers Panel" aria-expanded="true" id="layers-toggle">▲</button>
+        </header>
+        <div id="layers-content" class="expanded" tabindex="0">
+          <div class="layer-item">
+            <input type="checkbox" id="layer1" checked>
+            <label for="layer1" class="layer-label">Persil Baru</label>
+          </div>
+        </div>
+      </section>
 
       <div id="map" role="region" aria-label="Map"></div>
 
@@ -261,7 +278,6 @@
 
   <script src="resources/qgis2web_expressions.js"></script>
   <script src="./resources/functions.js"></script>
-  <script src="./resources/ol.js"></script>
   <script src="./resources/ol-layerswitcher.js"></script>
   <script src="layers/persil_baru_1.js"></script>
   <script src="styles/persil_baru_1_style.js"></script>
@@ -270,12 +286,70 @@
   <script src="./resources/qgis2web.js"></script>
 
   <script>
+    // Check if OpenLayers is loaded
+    if (typeof ol === 'undefined') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error Memuat Peta',
+        text: 'OpenLayers tidak dapat dimuat. Silakan periksa koneksi atau sumber daya peta.'
+      });
+      throw new Error('OpenLayers (ol) is not defined. Map initialization aborted.');
+    }
+
+    // Check login state on page load
+    let isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const logoutBtn = document.getElementById("logout-btn");
+
+    if (isLoggedIn) {
+      logoutBtn.style.display = "block";
+    } else {
+      logoutBtn.style.display = "none";
+      Swal.fire({
+        icon: 'warning',
+        title: 'Belum Login',
+        text: 'Anda harus login untuk mengakses halaman ini.',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        window.location.href = 'https://yontana258.github.io/kaliistac4/';
+      });
+    }
+
     // Logout function
     function logout() {
-      // Optional: Show confirmation before redirecting
-      if (confirm("Are you sure you want to log out?")) {
-        window.location.href = 'https://yontana258.github.io/kaliistac4/';
-      }
+      Swal.fire({
+        title: 'Konfirmasi Logout',
+        text: 'Apakah Anda yakin ingin logout?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Logout',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          try {
+            localStorage.setItem("isLoggedIn", "false");
+            logoutBtn.style.display = "none";
+            Swal.fire({
+              icon: 'success',
+              title: 'Logout Berhasil',
+              text: 'Anda akan diarahkan ke halaman login.',
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              window.location.href = 'https://yontana258.github.io/kaliistac4/';
+            });
+          } catch (error) {
+            console.error("Logout error:", error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Gagal Logout',
+              text: 'Terjadi kesalahan saat logout. Silakan coba lagi.'
+            });
+          }
+        }
+      });
     }
 
     // Panel toggle logic for layers
@@ -331,15 +405,32 @@
         }),
         new ol.layer.Vector({
           source: new ol.source.Vector({
-            url: 'path/to/your/shp/file.shp',
-            format: new ol.format.Shapefile()
+            url: './layers/persil_baru_1.geojson', // Updated to use GeoJSON from layers/persil_baru_1.js
+            format: new ol.format.GeoJSON()
           }),
+          style: function(feature) {
+            const status = feature.get('status') || 'Kosong';
+            const colorMap = {
+              'Kosong': '#ff0000',
+              'Hak Milik': '#00ff00',
+              'Hak Guna Bangunan': '#0000ff'
+            };
+            return new ol.style.Style({
+              fill: new ol.style.Fill({
+                color: colorMap[status] || '#ff0000'
+              }),
+              stroke: new ol.style.Stroke({
+                color: '#000000',
+                width: 1
+              })
+            });
+          },
           visible: true
         })
       ],
       view: new ol.View({
-        center: [0, 0],
-        zoom: 2
+        center: ol.proj.fromLonLat([110.72987627483798, -7.221053787984151]), // Adjusted to your previous coordinates
+        zoom: 15
       })
     });
 
@@ -351,12 +442,45 @@
         const checked = e.target.checked;
         if (layerId === 'layer1') {
           map.getLayers().item(1).setVisible(checked);
-        } else if (layerId === 'layer2') {
-          console.log(`Layer ${layerId} visibility: ${checked}`);
-        } else if (layerId === 'layer3') {
-          console.log(`Layer ${layerId} visibility: ${checked}`);
         }
       });
+    });
+
+    // Popup logic
+    const popup = new ol.Overlay({
+      element: document.getElementById('popup'),
+      autoPan: true,
+      autoPanAnimation: {
+        duration: 250
+      }
+    });
+    map.addOverlay(popup);
+
+    const popupCloser = document.getElementById('popup-closer');
+    popupCloser.addEventListener('click', function(e) {
+      e.preventDefault();
+      popup.setPosition(undefined);
+    });
+
+    map.on('singleclick', function(evt) {
+      const coordinate = evt.coordinate;
+      const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+        return feature;
+      });
+      if (feature) {
+        const properties = feature.getProperties();
+        let content = '<div class="table-responsive"><table class="table table-sm table-striped">';
+        Object.entries(properties).forEach(([key, value]) => {
+          if (key !== 'geometry') {
+            content += `<tr><th>${key}</th><td>${value}</td></tr>`;
+          }
+        });
+        content += '</table></div>';
+        document.getElementById('popup-content').innerHTML = content;
+        popup.setPosition(coordinate);
+      } else {
+        popup.setPosition(undefined);
+      }
     });
   </script>
 </body>
