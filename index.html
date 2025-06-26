@@ -1,355 +1,32 @@
-<!doctype html>
+<!doctype html>More actions
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <!-- Load OpenLayers from CDN for reliability -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.3.0/ol.css" />
-  <script src="https://cdn.jsdelivr.net/npm/ol@7.3.0/dist/ol.js"></script>
+  <link rel="stylesheet" href="./resources/ol.css" />
   <link rel="stylesheet" href="resources/fontawesome-all.min.css" />
   <link rel="stylesheet" href="./resources/ol-layerswitcher.css" />
   <link rel="stylesheet" href="./resources/qgis2web.css" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <title>Map Viewer</title>
   <title>KALISTA</title>
 
   <style>
     /* Reset & base */
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: 100vh;
-      background-color: #f9f9f9;
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #333;
-    }
-    #app {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      max-width: 1200px;
-      margin: 0 auto;
-      box-sizing: border-box;
-      padding: 0 1rem;
-    }
-
-    /* Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 0;
-      border-bottom: 1px solid #e5e7eb;
-      position: sticky;
-      top: 0;
-      background: #ffffff;
-      z-index: 1000;
-    }
-    header h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: #111827;
-      margin: 0;
-    }
-
-    /* Logout button */
-    .logout-button {
-      padding: 0.5em 1em;
-      background-color: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 0.75rem;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    .logout-button:hover,
-    .logout-button:focus {
-      background-color: #b91c1c;
-      outline: none;
-    }
-
-    /* Main content area: map and side panels */
-    #content {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 250px 1fr 250px;
-      gap: 1rem;
-      position: relative;
-    }
-
-    /* Layers panel */
-    #layers-panel, #legend-panel {
-      background: #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      border-radius: 0.75rem;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      max-height: 80vh;
-      overflow-y: auto;
-      user-select: none;
-    }
-
-    #layers-panel header, #legend-panel header {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      user-select: none;
-    }
-    #layers-panel header button, #legend-panel header button {
-      background: none;
-      border: none;
-      font-size: 1.25rem;
-      color: #6b7280;
-      cursor: pointer;
-      transition: color 0.3s ease;
-    }
-    #layers-panel header button:hover,
-    #legend-panel header button:hover {
-      color: #111827;
-    }
-
-    /* Expanded/collapsed content */
-    #layers-content, #legend-content {
-      overflow: hidden;
-      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    #layers-content.collapsed, #legend-content.collapsed {
-      max-height: 0;
-      padding: 0;
-      margin: 0;
-      pointer-events: none;
-    }
-    #layers-content.expanded, #legend-content.expanded {
-      max-height: 500px;
-    }
-
-    /* Layers list */
-    .layer-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 0.75rem;
-      font-size: 1rem;
-      color: #374151;
-    }
-    .layer-item:last-child {
-      margin-bottom: 0;
-    }
-    .layer-item input[type="checkbox"] {
-      margin-right: 0.75rem;
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-    }
-    .layer-label {
-      user-select: none;
-      cursor: pointer;
-    }
-
-    /* Legend entries */
-    .legend-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 0.75rem;
-      font-size: 1rem;
-      color: #374151;
-    }
-    .legend-item:last-child {
-      margin-bottom: 0;
-    }
-    .legend-color {
-      width: 20px;
-      height: 20px;
-      border-radius: 0.25rem;
-      margin-right: 0.75rem;
-      flex-shrink: 0;
-      box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Map */
-    #map {
-      width: 100%;
-      height: 60vh;
-      border-radius: 0.75rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      position: relative;
-    }
-
-    /* Popup */
-    .ol-popup {
-      max-width: 320px;
-      padding: 10px 14px;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      background: white;
-    }
-    .ol-popup-closer {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      font-size: 1.5rem;
-      text-decoration: none;
-      color: #6b7280;
-      cursor: pointer;
-      user-select: none;
-    }
-    .ol-popup-closer:hover {
-      color: #111827;
-    }
-
-    /* Responsive */
-    @media(max-width: 900px) {
-      #content {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-      }
-      #layers-panel, #legend-panel {
-        max-height: 300px;
-        border-radius: 0;
-        box-shadow: none;
-        padding: 0.5rem 1rem;
-      }
-      #map {
-        height: 50vh;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div id="app" role="main">
-    <header>
-      <h1>KALISTA</h1>
-      <button class="logout-button" type="button" aria-label="Logout" id="logout-btn" style="display: none;" onclick="logout()">Logout</button>
-    </header>
-
-    <div id="content">
-      <section id="layers-panel" aria-labelledby="layers-label" role="region" aria-expanded="true">
-        <header id="layers-label">
-          Layers
-          <button type="button" aria-label="Toggle Layers Panel" aria-expanded="true" id="layers-toggle">▲</button>
-        </header>
-        <div id="layers-content" class="expanded" tabindex="0">
-          <div class="layer-item">
-            <input type="checkbox" id="layer1" checked>
-            <label for="layer1" class="layer-label">Persil Baru</label>
-          </div>
-        </div>
-      </section>
-
-      <div id="map" role="region" aria-label="Map"></div>
-
-      <section id="legend-panel" aria-labelledby="legend-label" role="region" aria-expanded="true">
-        <header id="legend-label">
-          Legend
-          <button type="button" aria-label="Toggle Legend Panel" aria-expanded="true" id="legend-toggle">▲</button>
-        </header>
-        <div id="legend-content" class="expanded" tabindex="0">
-          <div class="legend-item">
-            <div class="legend-color" style="background:#ff0000;" aria-hidden="true"></div>
-            <span>Kosong</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:#00ff00;" aria-hidden="true"></div>
-            <span>Hak Milik</span>
-          </div>
-          <div class="legend-item">
-            <div class="legend-color" style="background:#0000ff;" aria-hidden="true"></div>
-            <span>Hak Guna Bangunan</span>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- Popup for map -->
-    <div id="popup" class="ol-popup">
-      <a href="#" id="popup-closer" class="ol-popup-closer">×</a>
-      <div id="popup-content"></div>
-    </div>
-  </div>
-
-  <script src="resources/qgis2web_expressions.js"></script>
-  <script src="./resources/functions.js"></script>
-  <script src="./resources/ol-layerswitcher.js"></script>
-  <script src="layers/persil_baru_1.js"></script>
-  <script src="styles/persil_baru_1_style.js"></script>
-  <script src="./layers/layers.js" type="text/javascript"></script> 
-  <script src="./resources/Autolinker.min.js"></script>
+@@ -270,92 +270,94 @@
   <script src="./resources/qgis2web.js"></script>
 
   <script>
-    // Check if OpenLayers is loaded
-    if (typeof ol === 'undefined') {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error Memuat Peta',
-        text: 'OpenLayers tidak dapat dimuat. Silakan periksa koneksi atau sumber daya peta.'
-      });
-      throw new Error('OpenLayers (ol) is not defined. Map initialization aborted.');
-    }
-
-    // Check login state on page load
-    let isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    const logoutBtn = document.getElementById("logout-btn");
-
-    if (isLoggedIn) {
-      logoutBtn.style.display = "block";
-    } else {
-      logoutBtn.style.display = "none";
-      Swal.fire({
-        icon: 'warning',
-        title: 'Belum Login',
-        text: 'Anda harus login untuk mengakses halaman ini.',
-        timer: 1500,
-        showConfirmButton: false
-      }).then(() => {
-        window.location.href = 'https://yontana258.github.io/kaliistac4/';
-      });
-    }
-
+    // Logout function placeholder
     // Logout function
     function logout() {
-      Swal.fire({
-        title: 'Konfirmasi Logout',
-        text: 'Apakah Anda yakin ingin logout?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Logout',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6b7280'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          try {
-            localStorage.setItem("isLoggedIn", "false");
-            logoutBtn.style.display = "none";
-            Swal.fire({
-              icon: 'success',
-              title: 'Logout Berhasil',
-              text: 'Anda akan diarahkan ke halaman login.',
-              timer: 1500,
-              showConfirmButton: false
-            }).then(() => {
-              window.location.href = 'https://yontana258.github.io/kaliistac4/';
-            });
-          } catch (error) {
-            console.error("Logout error:", error);
-            Swal.fire({
-              icon: 'error',
-              title: 'Gagal Logout',
-              text: 'Terjadi kesalahan saat logout. Silakan coba lagi.'
-            });
-          }
-        }
-      });
+      alert("Logging out...");
+      // window.location.href = 'https://yontana258.github.io/kaliistac4/';
+      // Optional: Show confirmation before redirecting
+      if (confirm("Are you sure you want to log out?")) {
+        window.location.href = 'https://yontana258.github.io/kaliistac4/';
+      }
     }
 
     // Panel toggle logic for layers
@@ -405,32 +82,15 @@
         }),
         new ol.layer.Vector({
           source: new ol.source.Vector({
-            url: './layers/persil_baru_1.geojson', // Updated to use GeoJSON from layers/persil_baru_1.js
-            format: new ol.format.GeoJSON()
+            url: 'path/to/your/shp/file.shp',
+            format: new ol.format.Shapefile()
           }),
-          style: function(feature) {
-            const status = feature.get('status') || 'Kosong';
-            const colorMap = {
-              'Kosong': '#ff0000',
-              'Hak Milik': '#00ff00',
-              'Hak Guna Bangunan': '#0000ff'
-            };
-            return new ol.style.Style({
-              fill: new ol.style.Fill({
-                color: colorMap[status] || '#ff0000'
-              }),
-              stroke: new ol.style.Stroke({
-                color: '#000000',
-                width: 1
-              })
-            });
-          },
           visible: true
         })
       ],
       view: new ol.View({
-        center: ol.proj.fromLonLat([110.72987627483798, -7.221053787984151]), // Adjusted to your previous coordinates
-        zoom: 15
+        center: [0, 0],
+        zoom: 2
       })
     });
 
@@ -442,45 +102,12 @@
         const checked = e.target.checked;
         if (layerId === 'layer1') {
           map.getLayers().item(1).setVisible(checked);
+        } else if (layerId === 'layer2') {
+          console.log(`Layer ${layerId} visibility: ${checked}`);
+        } else if (layerId === 'layer3') {
+          console.log(`Layer ${layerId} visibility: ${checked}`);
         }
       });
-    });
-
-    // Popup logic
-    const popup = new ol.Overlay({
-      element: document.getElementById('popup'),
-      autoPan: true,
-      autoPanAnimation: {
-        duration: 250
-      }
-    });
-    map.addOverlay(popup);
-
-    const popupCloser = document.getElementById('popup-closer');
-    popupCloser.addEventListener('click', function(e) {
-      e.preventDefault();
-      popup.setPosition(undefined);
-    });
-
-    map.on('singleclick', function(evt) {
-      const coordinate = evt.coordinate;
-      const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-        return feature;
-      });
-      if (feature) {
-        const properties = feature.getProperties();
-        let content = '<div class="table-responsive"><table class="table table-sm table-striped">';
-        Object.entries(properties).forEach(([key, value]) => {
-          if (key !== 'geometry') {
-            content += `<tr><th>${key}</th><td>${value}</td></tr>`;
-          }
-        });
-        content += '</table></div>';
-        document.getElementById('popup-content').innerHTML = content;
-        popup.setPosition(coordinate);
-      } else {
-        popup.setPosition(undefined);
-      }
     });
   </script>
 </body>
